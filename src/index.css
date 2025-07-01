@@ -1,0 +1,168 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 173 80% 40%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+    --radius: 0.5rem;
+    --chart-1: 12 76% 61%; /* Teal for approved */
+    --chart-2: 43 74% 66%; /* Yellow for pending */
+    --chart-3: 0 84% 60%; /* Red for rejected */
+    --chart-4: 173 58% 39%; /* Blue for trends */
+    --chart-5: 280 65% 60%; /* Purple for user activity */
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 173 80% 40%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 30 80% 55%;
+    --chart-3: 340 75% 55%;
+    --chart-4: 160 60% 45%;
+    --chart-5: 280 65% 60%;
+  }
+
+  * {
+    border-color: hsl(var(--border));
+  }
+
+  body {
+    font-family: 'Poppins', sans-serif;
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-size: 0.800rem; /* Reduced from 0.800rem (~14px) to 12px */
+    line-height: 1.4;
+    font-weight: 400;
+  }
+
+  h1 {
+    @apply text-lg font-semibold; /* Reduced from 20px to 18px */
+  }
+
+  h2 {
+    @apply text-base font-semibold; /* Reduced from 18px to 16px */
+  }
+
+  h3 {
+    @apply text-sm font-medium; /* Reduced from 16px to 14px */
+  }
+
+  .text-xs {
+    font-size: 0.65rem; /* Reduced from 12px to ~10.4px */
+    line-height: 0.9rem;
+  }
+
+  .text-sm {
+    font-size: 0.75rem; /* Reduced from 14px to 12px */
+    line-height: 1.1rem;
+  }
+
+  .text-base {
+    font-size: 0.875rem; /* Reduced from 16px to 14px */
+    line-height: 1.3rem;
+  }
+
+  .text-lg {
+    font-size: 1rem; /* Reduced from 18px to 16px */
+    line-height: 1.5rem;
+  }
+
+  .text-xl {
+    font-size: 1.125rem; /* Reduced from 20px to 18px */
+    line-height: 1.6rem;
+  }
+
+  .text-2xl {
+    font-size: 1.25rem; /* Reduced from 24px to 20px */
+    line-height: 1.8rem;
+  }
+
+  /* Table specific styles */
+  table {
+    @apply w-full text-xs; /* Reduced from 14px to 12px */
+  }
+
+  th {
+    @apply font-medium text-left text-xs; /* Ensure table headers use smaller font */
+  }
+
+  /* Button text sizes */
+  button {
+    @apply text-xs; /* Reduced from 14px to 12px */
+  }
+
+  /* Form elements */
+  input, textarea, select {
+    @apply text-xs; /* Reduced from 14px to 12px */
+  }
+
+  /* Badges */
+  .badge {
+    @apply text-xs; /* Ensure badges remain at 12px for consistency */
+  }
+
+  /* Cards */
+  .card {
+    @apply text-xs; /* Reduced from 14px to 12px */
+  }
+
+  /* Dialog titles */
+  .dialog-title {
+    @apply text-base font-semibold; /* Reduced from 18px to 16px */
+  }
+
+  /* Date picker custom styles */
+  .react-datepicker {
+    @apply text-xs border border-gray-200 dark:border-gray-700;
+  }
+
+  .react-datepicker__header {
+    @apply bg-gray-50 dark:bg-gray-800 text-xs;
+  }
+
+  .react-datepicker__day-name,
+  .react-datepicker__day,
+  .react-datepicker__time-name {
+    @apply text-xs;
+  }
+
+  .react-datepicker__input-container input {
+    @apply text-xs p-1.5 border rounded bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600;
+  }
+}
