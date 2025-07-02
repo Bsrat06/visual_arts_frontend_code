@@ -21,7 +21,7 @@ interface Event {
   registration_deadline?: string | null;
   capacity?: number | null;
   attendees_count: number;
-  gallery?: { image: string; caption?: string }[];
+  gallery?: { image: string; caption?: string }[]; // 'gallery' is optional
 }
 
 export default function VisitorEvents() {
@@ -38,7 +38,7 @@ export default function VisitorEvents() {
       try {
         const endpoint = tab === "upcoming" ? "/events/upcoming/" : "/past-events/";
         const res = await API.get(endpoint);
-        let data = res.data.results || res.data;
+        let data: Event[] = res.data.results || res.data; // Explicitly type data as Event[]
 
         if (tab === "upcoming" && user) {
           const registeredRes = await API.get("/events/registered/");
@@ -174,7 +174,7 @@ export default function VisitorEvents() {
         </CardFooter>
       )}
 
-      {tab === "past" && event.gallery?.length > 0 && (
+      {tab === "past" && event.gallery && event.gallery.length > 0 && ( 
         <CardFooter className="flex flex-col items-start space-y-2">
           <h4 className="font-semibold text-sm text-foreground">Highlights:</h4>
           <div className="grid grid-cols-2 gap-2">

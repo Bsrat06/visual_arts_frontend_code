@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import API from "../../lib/api";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger } from "../../components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/Table";
 import { Badge } from "../../components/ui/badge";
 import { Checkbox } from "../../components/ui/checkbox";
@@ -14,7 +14,8 @@ import { Avatar, AvatarImage, AvatarFallback } from "../../components/ui/avatar"
 import { Card, CardHeader, CardTitle, CardContent } from "../../components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "../../components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "../../components/ui/dialog";
-import { ProjectForm } from "../../components/admin/ProjectForm";
+// Import ProjectForm and ProjectFormState from the component file
+import { ProjectForm, type ProjectFormState } from "../../components/admin/ProjectForm";
 
 const getInitials = (name: string) => {
   const words = name.split(" ");
@@ -34,11 +35,11 @@ type Project = {
   title: string;
   description: string;
   progress?: number;
-  status?: "in_progress" | "completed";
+  status?: "in_progress" | "completed"; // API might return this
   start_date: string;
   end_date?: string | null;
   members: number[];
-  is_completed: boolean;
+  is_completed: boolean; // API returns this
   image?: string | null;
 };
 
@@ -72,8 +73,8 @@ function ProjectDetailsDialog({ project, members }: { project: Project; members:
           </p>
           <p className="text-sm text-muted-foreground">
             <span className="font-medium">Status:</span>{" "}
-            <Badge variant={project.status === "completed" ? "destructive" : "default"}>
-              {project.status === "completed" ? "Completed" : "In Progress"}
+            <Badge variant={project.is_completed ? "destructive" : "default"}>
+              {project.is_completed ? "Completed" : "In Progress"}
             </Badge>
           </p>
           <p className="text-sm text-muted-foreground">
@@ -160,7 +161,8 @@ function AssignMembersDialog({ project, members, onAssign, onOpenChange }: { pro
 export default function ManageProjects() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
-  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  // Use ProjectFormState for selectedProject to match initialData prop of ProjectForm
+  const [selectedProject, setSelectedProject] = useState<ProjectFormState | null>(null);
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showAssignDialog, setShowAssignDialog] = useState(false);
@@ -186,7 +188,7 @@ export default function ManageProjects() {
       if (search) url += `&search=${search}`;
       if (status !== "all") url += `&status=${status}`;
       if (member !== "all") url += `&members=${member}`;
-      const res = await API.get(url);
+      const res: { data: { results: Project[]; next: string | null; previous: string | null; count: number } } = await API.get(url);
       const projects = res.data.results || [];
       console.log('Fetched projects:', projects); // Debug project data
       setProjects(projects);
@@ -209,7 +211,7 @@ export default function ManageProjects() {
       let allMembers: Member[] = [];
       let nextPage: string | null = '/members/';
       while (nextPage) {
-        const res = await API.get(nextPage);
+        const res: { data: { results: Member[]; next: string | null } } = await API.get(nextPage);
         allMembers = [...allMembers, ...(res.data.results || res.data)];
         nextPage = res.data.next;
       }
@@ -222,7 +224,7 @@ export default function ManageProjects() {
 
   const fetchStats = async () => {
     try {
-      const res = await API.get("/project-stats/");
+      const res: { data: Stats } = await API.get("/project-stats/");
       setStats(res.data);
     } catch (error) {
       console.error("Failed to fetch stats", error);
@@ -238,9 +240,10 @@ export default function ManageProjects() {
     fetchStats();
   }, [debouncedSearch, statusFilter, memberFilter, activeTab]);
 
-  const addProject = async (project: any) => {
+  const addProject = async (projectData: ProjectFormState) => {
     try {
-      const res = await API.post("/projects/", { ...project, members: [] });
+      const { id, ...payload } = projectData;
+      await API.post("/projects/", { ...payload }); // Send all form data, backend handles ID
       fetchProjects(page, debouncedSearch, statusFilter, memberFilter);
       fetchStats();
       setShowEditDialog(false);
@@ -250,14 +253,15 @@ export default function ManageProjects() {
     }
   };
 
-  const editProject = async (updated: any, id: number | undefined) => {
+  const editProject = async (updated: ProjectFormState, id: number | undefined) => {
     try {
       if (!id) {
         toast.error("Project ID is missing. Please select a valid project.");
         return;
       }
       console.log('PATCH payload:', updated);
-      await API.patch(`/projects/${id}/`, updated, {
+      const { id: omitId, ...payload } = updated; // Omit 'id' from the payload for PATCH
+      await API.patch(`/projects/${id}/`, payload, {
         headers: { 'Content-Type': 'application/json' },
       });
       fetchProjects(page, debouncedSearch, statusFilter, memberFilter);
@@ -371,15 +375,15 @@ export default function ManageProjects() {
 
   const exportToCSV = async () => {
     try {
-      const res = await API.get("/projects/?all=true");
-      const projects = res.data.results || res.data;
+      const res: { data: { results: Project[] | any[] } } = await API.get("/projects/?all=true");
+      const projectsToExport = res.data.results || res.data;
       const headers = ["ID", "Title", "Description", "Progress", "Status", "Start Date", "Assigned Members"];
-      const rows = projects.map((project: Project) => [
+      const rows = projectsToExport.map((project: Project) => [
         project.id,
         `"${project.title}"`,
         `"${project.description.replace(/"/g, '""')}"`,
         project.progress ?? 0,
-        project.status ?? (project.is_completed ? "completed" : "in_progress"),
+        project.is_completed ? "completed" : "in_progress",
         new Date(project.start_date).toISOString(),
         project.members.length
       ].join(","));
@@ -411,14 +415,42 @@ export default function ManageProjects() {
   };
 
   const handleEdit = (project: Project) => {
-    console.log('Selected project for edit:', project); // Debug
+    console.log('Selected project for edit:', project);
     if (!project?.id) {
       toast.error("Invalid project selected. Please try again.");
       return;
     }
-    setSelectedProject(project);
+    // Transform Project to ProjectFormState for the form
+    const formInitialData: ProjectFormState = {
+      id: project.id,
+      title: project.title,
+      description: project.description,
+      progress: project.progress ?? 0,
+      is_completed: project.is_completed,
+      start_date: project.start_date,
+      end_date: project.end_date,
+      members: project.members,
+      image: project.image,
+    };
+    setSelectedProject(formInitialData);
     setShowEditDialog(true);
   };
+
+  // Helper to set ProjectFormState compatible data for dialogs that need project info
+  const handleViewDetailsOrAssign = (project: Project) => {
+    setSelectedProject({
+      id: project.id,
+      title: project.title,
+      description: project.description,
+      progress: project.progress ?? 0,
+      is_completed: project.is_completed,
+      start_date: project.start_date,
+      end_date: project.end_date,
+      members: project.members,
+      image: project.image,
+    });
+  };
+
 
   return (
     <div className="space-y-6">
@@ -437,7 +469,7 @@ export default function ManageProjects() {
             Refresh
           </Button>
           <Button size="sm" onClick={() => {
-            setSelectedProject(null);
+            setSelectedProject(null); // Set to null for adding a new project
             setShowEditDialog(true);
           }}>
             <Users className="w-4 h-4 mr-2" />
@@ -507,10 +539,12 @@ export default function ManageProjects() {
         <div className="flex gap-2">
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-[150px]">
-              <div className="flex items-center gap-2">
-                <Filter className="w-4 h-4" />
-                <span>Status: {statusFilter === "all" ? "All" : statusFilter}</span>
-              </div>
+              <SelectValue>
+                <div className="flex items-center gap-2">
+                  <Filter className="w-4 h-4" />
+                  <span>Status: {statusFilter === "all" ? "All" : statusFilter}</span>
+                </div>
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Status</SelectItem>
@@ -520,10 +554,12 @@ export default function ManageProjects() {
           </Select>
           <Select value={memberFilter} onValueChange={setMemberFilter}>
             <SelectTrigger className="w-[150px]">
-              <div className="flex items-center gap-2">
-                <Filter className="w-4 h-4" />
-                <span>Member: {memberFilter === "all" ? "All" : members.find(m => m.id.toString() === memberFilter)?.name || "All"}</span>
-              </div>
+              <SelectValue>
+                <div className="flex items-center gap-2">
+                  <Filter className="w-4 h-4" />
+                  <span>Member: {memberFilter === "all" ? "All" : members.find(m => m.id.toString() === memberFilter)?.name || "All"}</span>
+                </div>
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Members</SelectItem>
@@ -559,7 +595,7 @@ export default function ManageProjects() {
       )}
 
       <div className="rounded-md border">
-        <Table headers={["", "Title", "Progress", "Status", "Start Date", "Members", "Actions"]}>
+        <Table>
           <TableHeader>
             <TableRow>
               <TableHead className="w-[40px]">
@@ -620,8 +656,8 @@ export default function ManageProjects() {
                     <div className="text-sm">{project.progress ?? 0}%</div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant={project.status === "completed" ? "destructive" : "default"}>
-                      {project.status === "completed" ? "Completed" : "In Progress"}
+                    <Badge variant={project.is_completed ? "destructive" : "default"}>
+                      {project.is_completed ? "Completed" : "In Progress"}
                     </Badge>
                   </TableCell>
                   <TableCell>
@@ -654,7 +690,7 @@ export default function ManageProjects() {
                         <DropdownMenuItem
                           className="flex items-center gap-2 p-2 hover:bg-muted cursor-pointer"
                           onClick={() => {
-                            setSelectedProject(project);
+                            handleViewDetailsOrAssign(project);
                             setShowDetailsDialog(true);
                           }}
                         >
@@ -671,7 +707,7 @@ export default function ManageProjects() {
                         <DropdownMenuItem
                           className="flex items-center gap-2 p-2 hover:bg-muted cursor-pointer"
                           onClick={() => {
-                            setSelectedProject(project);
+                            handleViewDetailsOrAssign(project);
                             setShowAssignDialog(true);
                           }}
                         >
@@ -735,7 +771,7 @@ export default function ManageProjects() {
       </div>
 
       <Dialog open={showDetailsDialog} onOpenChange={setShowDetailsDialog}>
-        {selectedProject && <ProjectDetailsDialog project={selectedProject} members={members} />}
+        {selectedProject && <ProjectDetailsDialog project={selectedProject as Project} members={members} />}
       </Dialog>
 
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
@@ -744,14 +780,18 @@ export default function ManageProjects() {
             <DialogTitle className="text-gray-900 dark:text-white">{selectedProject ? "Edit Project" : "Add Project"}</DialogTitle>
             <DialogDescription className="text-muted-foreground">Enter project details below.</DialogDescription>
           </DialogHeader>
-          <ProjectForm onSubmit={selectedProject ? editProject : addProject} initialData={selectedProject} />
+          <ProjectForm
+            onSubmit={selectedProject ? editProject : addProject}
+            initialData={selectedProject || undefined}
+            membersList={members}
+          />
         </DialogContent>
       </Dialog>
 
       <Dialog open={showAssignDialog} onOpenChange={setShowAssignDialog}>
         {selectedProject && (
           <AssignMembersDialog
-            project={selectedProject}
+            project={selectedProject as Project}
             members={members}
             onAssign={assignMembers}
             onOpenChange={setShowAssignDialog}

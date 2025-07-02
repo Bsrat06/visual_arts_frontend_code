@@ -45,7 +45,8 @@ export default function VisitorGallery() {
       if (sortBy) url += `&sort=${sortBy === "date" ? "-submission_date" : "-likes_count"}`;
 
       const res = await API.get(url);
-      let artworksData = res.data.results;
+      // Explicitly type the results from the API response
+      let artworksData: Artwork[] = res.data.results;
 
       // Fetch liked artworks for authenticated users
       let likedArtworkIds = new Set<number>();
@@ -60,7 +61,7 @@ export default function VisitorGallery() {
       }
 
       // Ensure is_liked is set for all artworks
-      artworksData = artworksData.map((art: Artwork) => ({
+      artworksData = artworksData.map((art) => ({ // 'art' is already inferred as Artwork
         ...art,
         is_liked: likedArtworkIds.has(art.id),
       }));
@@ -70,9 +71,10 @@ export default function VisitorGallery() {
 
       // Extract unique categories on first page
       if (pageNum === 1) {
+        // Explicitly cast the result of map to string to ensure the Set contains strings
         const uniqueCategories = Array.from(
-          new Set(artworksData.map((art: Artwork) => art.category).filter(Boolean))
-        );
+          new Set(artworksData.map((art) => art.category).filter(Boolean))
+        ) as string[]; // <-- Type assertion added here
         setCategories(uniqueCategories);
       }
     } catch (err) {

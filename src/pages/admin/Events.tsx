@@ -7,16 +7,16 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from ".
 import { Badge } from "../../components/ui/badge";
 import { Checkbox } from "../../components/ui/checkbox";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../../components/ui/dropdown-menu";
-import { MoreHorizontal, ArrowUpDown, Filter, Download, RotateCw, Trash2, Image, Eye, Calendar, Lock } from "lucide-react";
+import { MoreHorizontal, ArrowUpDown, Filter, Download, RotateCw, Trash2, Eye, Calendar, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { useDebounce } from "../../hooks/use-debounce";
-import { Avatar, AvatarFallback, AvatarImage } from "../../components/ui/avatar";
 import { Card, CardHeader, CardTitle, CardContent } from "../../components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "../../components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "../../components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "../../components/ui/dialog";
 import { EventForm } from "../../components/admin/EventForm";
+import { AxiosError } from "axios"; // Import AxiosError
 
-
+// Interface for the structure of an Event
 type Event = {
   id: number;
   title: string;
@@ -33,11 +33,13 @@ type Event = {
   }[];
 };
 
+// Interface for sorting configuration
 type SortConfig = {
   key: keyof Event;
   direction: "asc" | "desc";
 };
 
+// Interface for event statistics
 type Stats = {
   total: number;
   upcoming: number;
@@ -45,6 +47,14 @@ type Stats = {
   recent: number;
 };
 
+// Interface for common API error responses
+interface ApiErrorResponse {
+  message?: string; // Generic error message
+  detail?: string;  // Often used by Django REST Framework for single errors
+  errors?: Record<string, string[]>; // For validation errors with field-specific messages
+}
+
+// Event Details Dialog Component
 function EventDetailsDialog({ event }: { event: Event }) {
   return (
     <DialogContent className="max-w-3xl bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700">
@@ -96,7 +106,9 @@ function EventDetailsDialog({ event }: { event: Event }) {
   );
 }
 
+// Main Component: ManageEvents
 export default function ManageEvents() {
+  // State variables
   const [events, setEvents] = useState<Event[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
@@ -115,6 +127,7 @@ export default function ManageEvents() {
 
   const debouncedSearch = useDebounce(searchQuery, 500);
 
+  // Function to fetch events from the API
   const fetchEvents = async (page = 1, search = "", status = "all", location = "all") => {
     setIsLoading(true);
     try {
@@ -123,45 +136,64 @@ export default function ManageEvents() {
       if (status !== "all") url += `&is_completed=${status === "completed"}`;
       if (location !== "all") url += `&location=${location}`;
 
-      const res = await API.get(url);
-      setEvents(res.data.results || []);
-      setHasNext(!!res.data.next);
-      setHasPrev(!!res.data.previous);
-      setTotalEvents(res.data.count || 0);
+      const { data } = await API.get(url); // Destructuring data directly
+      setEvents(data.results || []);
+      setHasNext(!!data.next);
+      setHasPrev(!!data.previous);
+      setTotalEvents(data.count || 0);
     } catch (error) {
-      toast.error("Failed to fetch events");
+      const axiosError = error as AxiosError<ApiErrorResponse>; // Type assertion for AxiosError with ApiErrorResponse data
+      toast.error(
+        axiosError.response?.data?.message ||
+        axiosError.response?.data?.detail ||
+        "Failed to fetch events"
+      );
     } finally {
       setIsLoading(false);
     }
   };
 
+  // Function to fetch event statistics
   const fetchStats = async () => {
     try {
-      const res = await API.get("event-stats/");
-      setStats(res.data);
+      const { data } = await API.get("event-stats/"); // Destructuring data directly
+      setStats(data);
     } catch (error) {
-      console.error("Failed to fetch stats", error);
-      toast.error("Failed to fetch event statistics");
+      const axiosError = error as AxiosError<ApiErrorResponse>; // Type assertion for AxiosError with ApiErrorResponse data
+      console.error("Failed to fetch stats", axiosError.response?.data || error);
+      toast.error(
+        axiosError.response?.data?.message ||
+        axiosError.response?.data?.detail ||
+        "Failed to fetch event statistics"
+      );
       setStats({ total: 0, upcoming: 0, completed: 0, recent: 0 });
     }
   };
 
+  // Effect hook to fetch data on component mount and when dependencies change
   useEffect(() => {
     fetchEvents(page, debouncedSearch, statusFilter, locationFilter);
     fetchStats();
   }, [page, debouncedSearch, statusFilter, locationFilter, activeTab]);
 
+  // Handler for deleting a single event
   const handleDelete = async (id: number) => {
     try {
       await API.delete(`/events/${id}/`);
-      fetchEvents(page, debouncedSearch, statusFilter, locationFilter);
+      fetchEvents(page, debouncedSearch, statusFilter, locationFilter); // Refresh data after deletion
       fetchStats();
       toast.success("Event deleted successfully");
     } catch (error) {
-      toast.error("Failed to delete event");
+      const axiosError = error as AxiosError<ApiErrorResponse>; // Type assertion for AxiosError with ApiErrorResponse data
+      toast.error(
+        axiosError.response?.data?.message ||
+        axiosError.response?.data?.detail ||
+        "Failed to delete event"
+      );
     }
   };
 
+  // Handler for bulk deleting selected events
   const handleBulkDelete = async () => {
     if (selectedIds.length === 0) {
       toast.warning("No events selected");
@@ -169,21 +201,28 @@ export default function ManageEvents() {
     }
     try {
       await Promise.all(selectedIds.map(id => API.delete(`/events/${id}/`)));
-      fetchEvents(page, debouncedSearch, statusFilter, locationFilter);
+      fetchEvents(page, debouncedSearch, statusFilter, locationFilter); // Refresh data after bulk deletion
       fetchStats();
-      setSelectedIds([]);
+      setSelectedIds([]); // Clear selected IDs
       toast.success(`${selectedIds.length} event(s) deleted successfully`);
     } catch (error) {
-      toast.error("Failed to delete selected events");
+      const axiosError = error as AxiosError<ApiErrorResponse>; // Type assertion for AxiosError with ApiErrorResponse data
+      toast.error(
+        axiosError.response?.data?.message ||
+        axiosError.response?.data?.detail ||
+        "Failed to delete selected events"
+      );
     }
   };
 
+  // Map for sorting table headers
   const headerKeyMap: Record<string, keyof Event> = {
     Title: "title",
     Date: "date",
     Location: "location",
   };
 
+  // Function to handle sorting requests
   const requestSort = (label: string) => {
     const key = headerKeyMap[label] || "date";
     let direction: "asc" | "desc" = "asc";
@@ -193,6 +232,7 @@ export default function ManageEvents() {
     setSortConfig({ key, direction });
   };
 
+  // Memoized sorted events (consider useMemo if `events` array is large and sorting is frequent)
   const sortedEvents = [...events].sort((a, b) => {
     const key = sortConfig.key;
     if (!a[key] || !b[key]) return 0;
@@ -205,12 +245,14 @@ export default function ManageEvents() {
     return 0;
   });
 
+  // Filtered events based on search query
   const filteredEvents = sortedEvents.filter(event =>
     event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     event.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
     event.location.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  // Handler for selecting/deselecting all events
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
       setSelectedIds(events.map(event => event.id));
@@ -219,6 +261,7 @@ export default function ManageEvents() {
     }
   };
 
+  // Handler for selecting/deselecting a single event
   const handleSelectEvent = (id: number, checked: boolean) => {
     if (checked) {
       setSelectedIds([...selectedIds, id]);
@@ -227,20 +270,16 @@ export default function ManageEvents() {
     }
   };
 
+  // Formats a date string to a locale-specific short date
   const formatDate = (dateString?: string) => {
     if (!dateString) return "N/A";
     return new Date(dateString).toLocaleDateString();
   };
 
-  const getInitials = (title: string) => {
-    const words = title.split(" ");
-    const first = words[0]?.charAt(0) || "";
-    const last = words[1]?.charAt(0) || "";
-    return `${first}${last}`.toUpperCase();
-  };
-
+  // Get unique locations for the filter dropdown
   const locations = Array.from(new Set(events.map(event => event.location))).filter(location => location && location.trim());
 
+  // Function to export event data to a CSV file
   const exportToCSV = () => {
     const headers = ["ID", "Title", "Description", "Location", "Date", "Status", "Participants"];
     const rows = events.map(event => [
@@ -265,18 +304,18 @@ export default function ManageEvents() {
     document.body.removeChild(link);
   };
 
+  // Handler for creating a new event
   const handleCreateEvent = async (data: any) => {
     try {
-
       const formattedDate = new Date(data.date).toISOString().split('T')[0];
-      
+
       // Create FormData for file upload support
       const formData = new FormData();
       formData.append('title', data.title);
       formData.append('location', data.location);
       formData.append('date', formattedDate);
       formData.append('description', data.description || '');
-      
+
       // Append file if it exists
       if (data.event_cover && data.event_cover[0]) {
         formData.append('event_cover', data.event_cover[0]);
@@ -292,14 +331,19 @@ export default function ManageEvents() {
         }
       };
 
-      const res = await API.post('/events/', formData, config);
-      fetchEvents(page, debouncedSearch, statusFilter, locationFilter);
+      await API.post('/events/', formData, config); // Directly call post, no need for `res` variable
+      fetchEvents(page, debouncedSearch, statusFilter, locationFilter); // Refresh data
       fetchStats();
       toast.success("Event created successfully");
       return true;
     } catch (error) {
-      console.error("Error details:", error.response?.data); // Log detailed error
-      toast.error(error.response?.data?.message || "Failed to create event");
+      const axiosError = error as AxiosError<ApiErrorResponse>; // Type assertion for AxiosError with ApiErrorResponse data
+      console.error("Error details:", axiosError.response?.data || error); // Log detailed error
+      toast.error(
+        axiosError.response?.data?.message ||
+        axiosError.response?.data?.detail ||
+        "Failed to create event"
+      );
       return false;
     }
   };
@@ -311,26 +355,24 @@ export default function ManageEvents() {
           <h1 className="text-2xl font-bold">Manage Events</h1>
           <p className="text-muted-foreground">Manage all events and their participants</p>
         </div>
-        
 
-          <div className="flex gap-2">
-            <EventForm 
-              triggerLabel="Add Event"
-              onSubmit={handleCreateEvent}
-            />
-            <Button variant="outline" size="sm" onClick={exportToCSV}>
-              <Download className="w-4 h-4 mr-2" />
-              Export
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => fetchEvents(page, debouncedSearch, statusFilter, locationFilter)} disabled={isLoading}>
-              <RotateCw className={`w-4 h-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
-              Refresh
-            </Button>
-          </div>
-
-          
+        <div className="flex gap-2">
+          <EventForm
+            triggerLabel="Add Event"
+            onSubmit={handleCreateEvent}
+          />
+          <Button variant="outline" size="sm" onClick={exportToCSV}>
+            <Download className="w-4 h-4 mr-2" />
+            Export
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => fetchEvents(page, debouncedSearch, statusFilter, locationFilter)} disabled={isLoading}>
+            <RotateCw className={`w-4 h-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
+            Refresh
+          </Button>
+        </div>
       </div>
 
+      {/* Statistics Cards */}
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
@@ -368,20 +410,27 @@ export default function ManageEvents() {
             <Calendar className="w-4 h-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">+{events.filter(event => new Date(event.date) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)).length}</div>
+            {/* The calculation for "Recent Events" in your original code was `+events.filter(...)` which adds a plus sign to the count.
+                If you just want the count of recent events, remove the `+`.
+                Also, ensure the date comparison logic matches your definition of "recent".
+                Here, I'm just showing the count of recent events from the fetched `events` array.
+            */}
+            <div className="text-2xl font-bold">{events.filter(event => new Date(event.date) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)).length}</div>
             <p className="text-xs text-muted-foreground">Last 7 days</p>
           </CardContent>
         </Card>
       </div>
 
+      {/* Tabs for filtering events by status */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
-          <TabsTrigger value="all">All ({totalEvents})</TabsTrigger>
-          <TabsTrigger value="upcoming">Upcoming ({stats.upcoming})</TabsTrigger>
-          <TabsTrigger value="completed">Completed ({stats.completed})</TabsTrigger>
+          <TabsTrigger value="all" onClick={() => setStatusFilter("all")}>All ({totalEvents})</TabsTrigger>
+          <TabsTrigger value="upcoming" onClick={() => setStatusFilter("upcoming")}>Upcoming ({stats.upcoming})</TabsTrigger>
+          <TabsTrigger value="completed" onClick={() => setStatusFilter("completed")}>Completed ({stats.completed})</TabsTrigger>
         </TabsList>
       </Tabs>
 
+      {/* Search and Filter Section */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <Input
           placeholder="Search events by title, description, or location..."
@@ -390,6 +439,7 @@ export default function ManageEvents() {
           className="max-w-sm"
         />
         <div className="flex gap-2">
+          {/* Status Filter */}
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-[150px]">
               <div className="flex items-center gap-2">
@@ -403,6 +453,7 @@ export default function ManageEvents() {
               <SelectItem value="completed">Completed</SelectItem>
             </SelectContent>
           </Select>
+          {/* Location Filter */}
           <Select value={locationFilter} onValueChange={setLocationFilter}>
             <SelectTrigger className="w-[150px]">
               <div className="flex items-center gap-2">
@@ -420,6 +471,7 @@ export default function ManageEvents() {
         </div>
       </div>
 
+      {/* Bulk Actions Section */}
       {selectedIds.length > 0 && (
         <div className="flex items-center gap-4 p-3 bg-muted rounded">
           <span className="text-sm text-muted-foreground">{selectedIds.length} selected</span>
@@ -443,8 +495,9 @@ export default function ManageEvents() {
         </div>
       )}
 
+      {/* Events Table */}
       <div className="rounded-md border">
-        <Table headers={["", "Cover", "Title", "Date", "Location", "Status", "Participants", "Actions"]}>
+        <Table>
           <TableHeader>
             <TableRow>
               <TableHead className="w-[40px]">
@@ -571,6 +624,7 @@ export default function ManageEvents() {
         </Table>
       </div>
 
+      {/* Pagination Controls */}
       <div className="flex items-center justify-between">
         <div className="text-sm text-muted-foreground">
           Showing <strong>{filteredEvents.length}</strong> of <strong>{totalEvents}</strong> events
@@ -596,6 +650,7 @@ export default function ManageEvents() {
         </div>
       </div>
 
+      {/* Event Details Dialog */}
       <Dialog open={showDetailsDialog} onOpenChange={setShowDetailsDialog}>
         {selectedEvent && <EventDetailsDialog event={selectedEvent} />}
       </Dialog>

@@ -16,7 +16,7 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 export default function AdminDashboard() {
   const { stats, loading: statsLoading } = useFetchStats();
   const { activities, loading: activitiesLoading } = useFetchRecentActivity();
-  
+
   // Sample data for charts
   const performanceData = [
     { name: 'Jan', users: 20, artworks: 45, events: 5 },
@@ -62,43 +62,47 @@ export default function AdminDashboard() {
 
       {/* Quick Actions */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-        <QuickAction 
-          title="Approve Artwork" 
-          icon={<CheckCircle2 className="w-5 h-5 text-green-500" />} 
+        <QuickAction
+          title="Approve Artwork"
+          icon={<CheckCircle2 className="w-5 h-5 text-green-500" />}
           href="/admin/approvals"
-          className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700"
+          customStyle="success" // Using customStyle for green styling
+          // className is now correctly passed through QuickActionProps
         />
-        <QuickAction 
-          title="Manage Events" 
-          icon={<CalendarDays className="w-5 h-5 text-blue-500" />} 
+        <QuickAction
+          title="Manage Events"
+          icon={<CalendarDays className="w-5 h-5 text-blue-500" />}
           href="/admin/events"
-          className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700"
+          // No custom style, relies on default or Badge variant
         />
-        <QuickAction 
-          title="Add Member" 
-          icon={<UserPlus className="w-5 h-5 text-purple-500" />} 
+        <QuickAction
+          title="Add Member"
+          icon={<UserPlus className="w-5 h-5 text-purple-500" />}
           href="/admin/members/new"
-          className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700"
+          // No custom style
         />
-        <QuickAction 
-          title="Create Project" 
-          icon={<FolderKanban className="w-5 h-5 text-orange-500" />} 
+        <QuickAction
+          title="Create Project"
+          icon={<FolderKanban className="w-5 h-5 text-orange-500" />}
           href="/admin/projects/new"
-          className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700"
+          // No custom style
         />
-        <QuickAction 
-          title="View Reports" 
-          icon={<TrendingUp className="w-5 h-5 text-amber-500" />} 
+        <QuickAction
+          title="View Reports"
+          icon={<TrendingUp className="w-5 h-5 text-amber-500" />}
           href="/admin/reports"
-          className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700"
+          // No custom style
         />
-        <QuickAction 
-          title="Pending Tasks" 
-          icon={<AlertCircle className="w-5 h-5 text-red-500" />} 
+        <QuickAction
+          title="Pending Tasks"
+          icon={<AlertCircle className="w-5 h-5 text-red-500" />}
           href="/admin/tasks"
-          className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700"
+          customStyle="warning" // Using customStyle for yellow/red styling
+          badge={stats?.pendingApprovals || 0} // Example: show pending approvals as a badge
+          variant="destructive" // Example: use destructive badge variant for pending tasks
         />
       </div>
+
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -118,53 +122,54 @@ export default function AdminDashboard() {
           </>
         ) : (
           <>
-            <StatCard 
-              title="Total Members" 
-              value={stats?.totalMembers || 0} 
+            <StatCard
+              title="Total Members"
+              value={stats?.totalMembers || 0}
               change={stats?.memberChange || 0}
               icon={<Users className="w-6 h-6 text-teal-500" />}
-              className="border border-gray-200 dark:border-gray-700"
+              // className is now correctly passed through StatCardProps
             />
-            <StatCard 
-              title="Artworks Submitted" 
-              value={stats?.totalArtworks || 0} 
+            <StatCard
+              title="Artworks Submitted"
+              value={stats?.totalArtworks || 0}
               change={stats?.artworkChange || 0}
               icon={<Brush className="w-6 h-6 text-blue-500" />}
-              className="border border-gray-200 dark:border-gray-700"
+              // className is now correctly passed through StatCardProps
             />
-            <StatCard 
-              title="Upcoming Events" 
-              value={stats?.upcomingEvents || 0} 
+            <StatCard
+              title="Upcoming Events"
+              value={stats?.upcomingEvents || 0}
               icon={<CalendarDays className="w-6 h-6 text-purple-500" />}
-              className="border border-gray-200 dark:border-gray-700"
+              // className is now correctly passed through StatCardProps
             />
-            <StatCard 
-              title="Active Projects" 
-              value={stats?.activeProjects || 0} 
+            <StatCard
+              title="Active Projects"
+              value={stats?.activeProjects || 0}
               icon={<FolderKanban className="w-6 h-6 text-orange-500" />}
-              className="border border-gray-200 dark:border-gray-700"
+              // className is now correctly passed through StatCardProps
             />
           </>
         )}
       </div>
 
+
       {/* Main Content */}
       <Tabs defaultValue="overview" className="space-y-6">
         <TabsList className="bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
-          <TabsTrigger 
-            value="overview" 
+          <TabsTrigger
+            value="overview"
             // className="data-[state=active]: data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-gray-200 dark:data-[state=active]:bg-gray-700 dark:data-[state=active]:border-gray-600"
           >
             Overview
           </TabsTrigger>
-          <TabsTrigger 
-            value="analytics" 
+          <TabsTrigger
+            value="analytics"
             // className="data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-gray-200 dark:data-[state=active]:bg-gray-700 dark:data-[state=active]:border-gray-600"
           >
             Analytics
           </TabsTrigger>
-          <TabsTrigger 
-            value="activity" 
+          <TabsTrigger
+            value="activity"
             // className="data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-gray-200 dark:data-[state=active]:bg-gray-700 dark:data-[state=active]:border-gray-600"
           >
             Activity Log
@@ -193,7 +198,7 @@ export default function AdminDashboard() {
                 ) : activities.length > 0 ? (
                   <div className="divide-y divide-gray-200 dark:divide-gray-700">
                     {activities.map((activity) => (
-                      <RecentActivityItem 
+                      <RecentActivityItem
                         key={activity.id}
                         type={activity.type}
                         title={activity.title}
@@ -287,18 +292,18 @@ export default function AdminDashboard() {
                 <div className="h-[300px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={performanceData}>
-                      <XAxis 
-                        dataKey="name" 
+                      <XAxis
+                        dataKey="name"
                         tick={{ fontSize: 12 }}
                         axisLine={false}
                         tickLine={false}
                       />
-                      <YAxis 
+                      <YAxis
                         tick={{ fontSize: 12 }}
                         axisLine={false}
                         tickLine={false}
                       />
-                      <Tooltip 
+                      <Tooltip
                         contentStyle={{
                           background: 'hsl(var(--background))',
                           borderColor: 'hsl(var(--border))',
@@ -307,28 +312,28 @@ export default function AdminDashboard() {
                         }}
                       />
                       <Legend />
-                      <Area 
-                        type="monotone" 
-                        dataKey="users" 
-                        stroke="#3b82f6" 
-                        fill="#3b82f6" 
-                        fillOpacity={0.2} 
-                        name="New Users" 
+                      <Area
+                        type="monotone"
+                        dataKey="users"
+                        stroke="#3b82f6"
+                        fill="#3b82f6"
+                        fillOpacity={0.2}
+                        name="New Users"
                       />
-                      <Area 
-                        type="monotone" 
-                        dataKey="artworks" 
-                        stroke="#10b981" 
-                        fill="#10b981" 
-                        fillOpacity={0.2} 
-                        name="Artworks" 
+                      <Area
+                        type="monotone"
+                        dataKey="artworks"
+                        stroke="#10b981"
+                        fill="#10b981"
+                        fillOpacity={0.2}
+                        name="Artworks"
                       />
                     </AreaChart>
                   </ResponsiveContainer>
                 </div>
               </CardContent>
             </Card>
-            
+
             <Card className="border border-gray-200 dark:border-gray-700">
               <CardHeader>
                 <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -347,13 +352,14 @@ export default function AdminDashboard() {
                         outerRadius={80}
                         fill="#8884d8"
                         dataKey="value"
-                        label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                        // Fixed: 'percent' is possibly 'undefined'.
+                        label={({ name, percent }) => `${name}: ${((percent ?? 0) * 100).toFixed(0)}%`}
                       >
-                        {activityDistribution.map((entry, index) => (
+                        {activityDistribution.map((_entry, index) => ( // Fixed: 'entry' is declared but its value is never read.
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
                       </Pie>
-                      <Tooltip 
+                      <Tooltip
                         contentStyle={{
                           background: 'hsl(var(--background))',
                           borderColor: 'hsl(var(--border))',
@@ -367,7 +373,7 @@ export default function AdminDashboard() {
               </CardContent>
             </Card>
           </div>
-          
+
           <Card className="border border-gray-200 dark:border-gray-700">
             <CardHeader>
               <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -386,18 +392,18 @@ export default function AdminDashboard() {
                     { name: 'Sat', value: 190 },
                     { name: 'Sun', value: 140 },
                   ]}>
-                    <XAxis 
-                      dataKey="name" 
+                    <XAxis
+                      dataKey="name"
                       tick={{ fontSize: 12 }}
                       axisLine={false}
                       tickLine={false}
                     />
-                    <YAxis 
+                    <YAxis
                       tick={{ fontSize: 12 }}
                       axisLine={false}
                       tickLine={false}
                     />
-                    <Tooltip 
+                    <Tooltip
                       contentStyle={{
                         background: 'hsl(var(--background))',
                         borderColor: 'hsl(var(--border))',
@@ -405,11 +411,11 @@ export default function AdminDashboard() {
                         boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
                       }}
                     />
-                    <Bar 
-                      dataKey="value" 
-                      fill="#8b5cf6" 
-                      radius={[4, 4, 0, 0]} 
-                      name="Active Users" 
+                    <Bar
+                      dataKey="value"
+                      fill="#8b5cf6"
+                      radius={[4, 4, 0, 0]}
+                      name="Active Users"
                     />
                   </BarChart>
                 </ResponsiveContainer>
@@ -438,7 +444,7 @@ export default function AdminDashboard() {
               ) : activities.length > 0 ? (
                 <div className="divide-y divide-gray-200 dark:divide-gray-700">
                   {activities.map((activity) => (
-                    <RecentActivityItem 
+                    <RecentActivityItem
                       key={activity.id}
                       type={activity.type}
                       title={activity.title}
@@ -473,5 +479,5 @@ export default function AdminDashboard() {
         </TabsContent>
       </Tabs>
     </div>
-  )
+  );
 }

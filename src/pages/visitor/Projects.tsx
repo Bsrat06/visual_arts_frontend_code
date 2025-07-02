@@ -9,14 +9,14 @@ import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from "../../
 import { Progress } from "../../components/ui/progress";
 import { Alert, AlertDescription, AlertTitle } from "../../components/ui/alert";
 
-interface Project {
-  id: number;
-  title: string;
-  description: string;
-  status?: string; // Made optional
-  start_date: string;
-  end_date: string;
-}
+// interface Project {
+//   id: number;
+//   title: string;
+//   description: string;
+//   status?: string; // Made optional
+//   start_date: string;
+//   end_date: string;
+// }
 
 interface ProjectStatusBadgeProps {
   status?: string;

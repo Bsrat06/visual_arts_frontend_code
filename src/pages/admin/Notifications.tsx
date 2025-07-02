@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from ".
 import { Badge } from "../../components/ui/badge";
 import { Checkbox } from "../../components/ui/checkbox";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../../components/ui/dropdown-menu";
-import { MoreHorizontal, ArrowUpDown, Filter, Download, RotateCw, Trash2, Eye, Bell, Send, Users, AlertCircle } from "lucide-react";
+import { MoreHorizontal, ArrowUpDown, Filter, Download, RotateCw, Trash2, Eye, Bell, Send, Users} from "lucide-react";
 import { toast } from "sonner";
 import { useDebounce } from "../../hooks/use-debounce";
 import { Avatar, AvatarFallback, AvatarImage } from "../../components/ui/avatar";
