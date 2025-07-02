@@ -5,22 +5,29 @@ import { Label } from "../../components/ui/label";
 import { Textarea } from "../../components/ui/textarea";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "../../components/ui/card";
 import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from "../../components/ui/tooltip";
-import { Upload, Eye, EyeOff, Trash2, RotateCw, User, Check, X } from "lucide-react";
+import { Upload, Eye, EyeOff, Trash2, RotateCw, Check, X } from "lucide-react";
 import { toast } from "sonner";
 import Cropper from "react-easy-crop";
 import { Slider } from "../../components/ui/slider";
 import API from "../../lib/api";
 import { Badge } from "../../components/ui/badge";
-import { Progress } from "../../components/ui/progress";
+import { Progress } from "../../components/ui/progress"; // Make sure this import is correct
 import { Avatar, AvatarFallback, AvatarImage } from "../../components/ui/avatar";
 
+// Type for the form state, specifically for data to be submitted
 type ProfileForm = {
   first_name: string;
   last_name: string;
   email: string;
   password: string;
   bio: string;
-  profile_picture: File | null;
+  profile_picture: File | null; // For a newly selected file
+};
+
+// Type for the initial form state, reflecting data from the server
+// This includes the URL of the existing profile picture
+type InitialProfileForm = Omit<ProfileForm, 'profile_picture'> & {
+  profile_picture_url: string | null; // For the URL of the existing picture
 };
 
 type CroppedAreaPixels = {
@@ -49,8 +56,9 @@ export default function MemberProfile() {
     bio: "",
     profile_picture: null,
   });
-  const [initialForm, setInitialForm] = useState<ProfileForm | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  // initialForm now uses InitialProfileForm type to store the URL
+  const [initialForm, setInitialForm] = useState<InitialProfileForm | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null); // URL for displaying the picture
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<CroppedAreaPixels | null>(null);
@@ -65,18 +73,31 @@ export default function MemberProfile() {
     setIsLoading(true);
     API.get("/auth/user/")
       .then((res) => {
-        const { first_name, last_name, email, bio, profile_picture } = res.data;
-        const profileData = { 
-          first_name, 
-          last_name, 
-          email, 
-          bio: bio || "", 
-          profile_picture: null, 
-          password: "" 
+        const { first_name, last_name, email, bio, profile_picture } = res.data; // profile_picture from API is a string URL or null
+        
+        const currentProfileUrl = profile_picture || null;
+
+        const profileDataForForm: ProfileForm = {
+          first_name,
+          last_name,
+          email,
+          bio: bio || "",
+          profile_picture: null, // No File initially, only when selected
+          password: "" // Password field is always cleared initially for security
         };
-        setForm(profileData);
-        setInitialForm(profileData);
-        setPreviewUrl(profile_picture || null);
+
+        const initialDataForReset: InitialProfileForm = {
+          first_name,
+          last_name,
+          email,
+          bio: bio || "",
+          profile_picture_url: currentProfileUrl, // Store the URL from the server
+          password: "" // Initial password state is blank for comparison
+        };
+
+        setForm(profileDataForForm);
+        setInitialForm(initialDataForReset);
+        setPreviewUrl(currentProfileUrl); // Set the preview URL for display
       })
       .catch(() => toast.error("Failed to load profile"))
       .finally(() => setIsLoading(false));
@@ -86,7 +107,7 @@ export default function MemberProfile() {
     const { name, value, files } = e.target as HTMLInputElement;
     if (name === "profile_picture" && files && files[0]) {
       setForm({ ...form, profile_picture: files[0] });
-      setPreviewUrl(URL.createObjectURL(files[0]));
+      setPreviewUrl(URL.createObjectURL(files[0])); // Create URL for display from File object
       setShowCropper(true);
     } else {
       setForm({ ...form, [name]: value });
@@ -153,7 +174,8 @@ export default function MemberProfile() {
     if (previewUrl && croppedAreaPixels) {
       try {
         const croppedImage = await getCroppedImg(previewUrl, croppedAreaPixels);
-        setForm({ ...form, profile_picture: croppedImage });
+        setForm({ ...form, profile_picture: croppedImage }); // Update form with the new File object
+        setPreviewUrl(URL.createObjectURL(croppedImage)); // Update preview with new URL for the cropped image
         setShowCropper(false);
         toast.success("Image cropped successfully");
       } catch (err) {
@@ -166,10 +188,12 @@ export default function MemberProfile() {
     setIsLoading(true);
     try {
       await API.delete("/auth/profile/remove-picture/");
-      setForm({ ...form, profile_picture: null });
-      setPreviewUrl(null);
+      setForm({ ...form, profile_picture: null }); // Clear the file from form
+      setPreviewUrl(null); // Clear the preview URL
       setShowCropper(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
+      // Also update initialForm to reflect the picture removal immediately
+      setInitialForm(prev => prev ? { ...prev, profile_picture_url: null } : null);
       toast.success("Profile picture removed successfully");
     } catch (err) {
       toast.error("Failed to remove profile picture");
@@ -180,8 +204,18 @@ export default function MemberProfile() {
 
   const resetForm = () => {
     if (initialForm) {
-      setForm(initialForm);
-      setPreviewUrl(initialForm.profile_picture || null);
+      // Reconstruct form state from initialForm for text fields
+      const formResetData: ProfileForm = {
+        first_name: initialForm.first_name,
+        last_name: initialForm.last_name,
+        email: initialForm.email,
+        password: "", // Always reset password field for security
+        bio: initialForm.bio,
+        profile_picture: null, // Discard any new file selection
+      };
+
+      setForm(formResetData);
+      setPreviewUrl(initialForm.profile_picture_url); // Use the stored URL for preview
       setErrors({});
       setShowCropper(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -194,7 +228,7 @@ export default function MemberProfile() {
       first_name: form.first_name.length > 50 ? "First name must be 50 characters or less" : undefined,
       last_name: form.last_name.length > 50 ? "Last name must be 50 characters or less" : undefined,
       email: !validateEmail(form.email) ? "Invalid email format" : undefined,
-      password: !validatePassword(form.password) ? "Password must be at least 8 characters with uppercase, lowercase, and number" : undefined,
+      password: form.password !== "" && !validatePassword(form.password) ? "Password must be at least 8 characters with uppercase, lowercase, and number" : undefined,
       bio: form.bio.length > 500 ? "Bio must be 500 characters or less" : undefined,
     };
     setErrors(newErrors);
@@ -214,10 +248,22 @@ export default function MemberProfile() {
     if (form.profile_picture) data.append("profile_picture", form.profile_picture);
 
     try {
-      await API.put("/auth/profile/update/", data, {
+      const res = await API.put("/auth/profile/update/", data, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      setInitialForm(form);
+
+      // Update initialForm with the current state after successful save
+      // Ensure profile_picture_url reflects the newly saved URL from the response
+      setInitialForm({
+        first_name: form.first_name,
+        last_name: form.last_name,
+        email: form.email,
+        bio: form.bio,
+        password: "", // Clear password after saving
+        profile_picture_url: res.data.profile_picture || null, // Get the updated URL from response
+      });
+      setForm(prev => ({ ...prev, profile_picture: null, password: "" })); // Clear file and password from current form state
+
       toast.success("Profile updated successfully");
     } catch (err: any) {
       toast.error(err.response?.data?.detail || "Failed to update profile");
@@ -228,14 +274,25 @@ export default function MemberProfile() {
 
   const hasChanges = () => {
     if (!initialForm) return false;
-    return (
+
+    // Check for changes in text fields
+    const textFieldsChanged =
       form.first_name !== initialForm.first_name ||
       form.last_name !== initialForm.last_name ||
       form.email !== initialForm.email ||
-      form.password !== "" ||
-      form.bio !== initialForm.bio ||
-      form.profile_picture !== null
-    );
+      form.bio !== initialForm.bio;
+
+    // Check if password field has content (implies user wants to change it)
+    const passwordChanged = form.password !== "";
+
+    // Check if a new file has been selected for upload
+    const newPictureSelected = form.profile_picture !== null;
+
+    // Check if the displayed picture URL has changed (e.g., deleted or a new one successfully uploaded and updated in previewUrl)
+    // This handles cases where the picture was deleted (previewUrl becomes null) or a new one was uploaded (previewUrl changes)
+    const pictureUrlChanged = previewUrl !== initialForm.profile_picture_url;
+
+    return textFieldsChanged || passwordChanged || newPictureSelected || pictureUrlChanged;
   };
 
   return (
@@ -264,8 +321,8 @@ export default function MemberProfile() {
                 <div className="relative group">
                   <Avatar className="w-32 h-32 rounded-full border-4 border-white dark:border-gray-800 shadow-md">
                     {previewUrl ? (
-                      <AvatarImage 
-                        src={previewUrl} 
+                      <AvatarImage
+                        src={previewUrl}
                         alt={`${form.first_name} ${form.last_name}`}
                         className="object-cover"
                       />
@@ -356,8 +413,9 @@ export default function MemberProfile() {
                         size="sm"
                         onClick={() => {
                           setShowCropper(false);
-                          setForm({ ...form, profile_picture: null });
-                          setPreviewUrl(null);
+                          // Revert to the original preview URL or clear if none
+                          setPreviewUrl(initialForm?.profile_picture_url || null);
+                          setForm(prev => ({ ...prev, profile_picture: null })); // Clear selected file
                           if (fileInputRef.current) fileInputRef.current.value = "";
                         }}
                         disabled={isLoading}

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import API from "../../lib/api";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger } from "../../components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/Table";
 import { Card, CardHeader, CardTitle, CardContent } from "../../components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "../../components/ui/tabs";
@@ -260,10 +260,12 @@ export default function Reports() {
           <div className="flex gap-2">
             <Select value={categoryFilter} onValueChange={setCategoryFilter}>
               <SelectTrigger className="w-[150px]">
-                <div className="flex items-center gap-2">
-                  <Filter className="w-4 h-4" />
-                  <span>Category: {categoryFilter === "all" ? "All" : categoryFilter}</span>
-                </div>
+                <SelectValue>
+                  <div className="flex items-center gap-2">
+                    <Filter className="w-4 h-4" />
+                    <span>Category: {categoryFilter === "all" ? "All" : categoryFilter}</span>
+                  </div>
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Categories</SelectItem>
@@ -274,10 +276,12 @@ export default function Reports() {
             </Select>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-[150px]">
-                <div className="flex items-center gap-2">
-                  <Filter className="w-4 h-4" />
-                  <span>Status: {statusFilter === "all" ? "All" : statusFilter}</span>
-                </div>
+                <SelectValue>
+                  <div className="flex items-center gap-2">
+                    <Filter className="w-4 h-4" />
+                    <span>Status: {statusFilter === "all" ? "All" : statusFilter}</span>
+                  </div>
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Statuses</SelectItem>
@@ -288,10 +292,12 @@ export default function Reports() {
             </Select>
             <Select value={roleFilter} onValueChange={setRoleFilter}>
               <SelectTrigger className="w-[150px]">
-                <div className="flex items-center gap-2">
-                  <Filter className="w-4 h-4" />
-                  <span>Role: {roleFilter === "all" ? "All" : roleFilter}</span>
-                </div>
+                <SelectValue>
+                  <div className="flex items-center gap-2">
+                    <Filter className="w-4 h-4" />
+                    <span>Role: {roleFilter === "all" ? "All" : roleFilter}</span>
+                  </div>
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Roles</SelectItem>
@@ -382,7 +388,7 @@ export default function Reports() {
                       outerRadius={100}
                       label
                     >
-                      {categoryAnalytics.map((entry, index) => (
+                      {categoryAnalytics.map((_entry, index) => ( // Fixed: Added underscore to 'entry'
                         <Cell key={index} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
@@ -430,7 +436,7 @@ export default function Reports() {
           </div>
         ) : (
           <div className="rounded-md border">
-            <Table headers={["Category", "Approved", "Pending", "Rejected", "Total"]}>
+            <Table> {/* Removed headers prop as it's not a standard prop for Table */}
               <TableHeader>
                 <TableRow>
                   <TableHead>Category</TableHead>

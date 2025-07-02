@@ -8,11 +8,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "../../components/ui/dialog";
 import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from "../../components/ui/tooltip";
 import { Badge } from "../../components/ui/badge";
-import { Upload, Trash2, Edit, RotateCw, ArrowUpDown, Filter, Plus, Image as ImageIcon, X, Heart } from "lucide-react";
+import { Upload, Trash2, Edit, RotateCw, Filter, Plus, Image as ImageIcon, X, Heart } from "lucide-react";
 import { toast } from "sonner";
 import Cropper from "react-easy-crop";
 import API from "../../lib/api";
 import "react-datepicker/dist/react-datepicker.css";
+
+// Define the exact types for approval status
+type ApprovalStatus = "approved" | "pending" | "rejected";
 
 type Artwork = {
   id: number;
@@ -20,7 +23,7 @@ type Artwork = {
   category: string;
   description: string;
   image: string;
-  approval_status: string;
+  approval_status: ApprovalStatus; // Changed to the specific union type
   submission_date: string;
   feedback?: string;
   likes_count: number;
@@ -53,7 +56,7 @@ const STATUS_VARIANTS = {
   approved: "default",
   pending: "secondary",
   rejected: "destructive",
-};
+} as const; // Added 'as const' here for stricter type inference
 
 const validateForm = (form: ArtworkForm): Errors => ({
   title: form.title.length === 0 ? "Title is required" : form.title.length > 100 ? "Title must be 100 characters or less" : undefined,
@@ -667,7 +670,7 @@ export default function Portfolio() {
                             {art.category}
                           </Badge>
                           <div className="flex items-center gap-2">
-                            <Badge variant={STATUS_VARIANTS[art.approval_status as keyof typeof STATUS_VARIANTS]}>
+                            <Badge variant={STATUS_VARIANTS[art.approval_status]}> {/* No need for 'as keyof typeof' anymore */}
                               {art.approval_status}
                             </Badge>
                             {art.approval_status === 'approved' && (

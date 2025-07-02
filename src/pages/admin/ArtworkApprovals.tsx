@@ -8,7 +8,7 @@ import { Tabs, TabsList, TabsTrigger } from "../../components/ui/tabs";
 import { Badge } from "../../components/ui/badge";
 import { Checkbox } from "../../components/ui/checkbox";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../../components/ui/dropdown-menu";
-import { MoreHorizontal, ArrowUpDown, Filter, Download, RotateCw, Mail, Trash2, UserPlus, Eye, Lock, Image } from "lucide-react";
+import { MoreHorizontal, ArrowUpDown, Filter, Download, RotateCw, Mail, Trash2, Eye, Lock, Image } from "lucide-react";
 import { toast } from "sonner";
 import { useDebounce } from "../../hooks/use-debounce";
 import { Avatar, AvatarFallback, AvatarImage } from "../../components/ui/avatar";

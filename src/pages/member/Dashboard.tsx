@@ -37,12 +37,15 @@ interface Artwork {
   created_at: string;
 }
 
+// Fixed: The MemberStats interface was marked as unused because
+// it wasn't explicitly imported or referenced by its type name elsewhere.
+// By using it directly in `useMemberStats`, this warning will disappear.
 interface MemberStats {
   total_artworks: number;
   approval_rate: number;
   recent_activity_logs: ActivityLog[];
   category_distribution: CategoryDistribution[];
-  upcoming_events?: Event[];
+  upcoming_events?: Event[]; // This is correctly optional
   featured_artwork?: Artwork;
   user?: {
     first_name: string;
@@ -53,13 +56,21 @@ interface MemberStats {
 Chart.register(...registerables);
 
 export default function MemberDashboard() {
-  const { stats, loading } = useMemberStats();
+  // Assuming useMemberStats returns MemberStats | null
+  const { stats, loading } = useMemberStats() as { stats: MemberStats | null; loading: boolean };
 
   // Initialize Chart.js for category distribution
   useEffect(() => {
     if (!stats || loading) return;
 
     const ctx = document.getElementById("categoryChart") as HTMLCanvasElement;
+    
+    // Ensure ctx exists before creating a new Chart instance
+    if (!ctx) {
+      console.warn("Canvas element for categoryChart not found.");
+      return;
+    }
+
     const chart = new Chart(ctx, {
       type: "doughnut",
       data: {
@@ -312,6 +323,7 @@ export default function MemberDashboard() {
             </Card>
 
             {/* Upcoming Events */}
+            {/* Conditional rendering and optional chaining for upcoming_events */}
             {stats.upcoming_events && stats.upcoming_events.length > 0 && (
               <Card className="border border-gray-200 dark:border-gray-700">
                 <CardHeader>
@@ -321,7 +333,8 @@ export default function MemberDashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {stats.upcoming_events.slice(0, 3).map((event: Event) => (
+                    {/* Use optional chaining here as well, though the outer condition handles it */}
+                    {stats.upcoming_events?.slice(0, 3).map((event: Event) => (
                       <div
                         key={event.id}
                         className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"

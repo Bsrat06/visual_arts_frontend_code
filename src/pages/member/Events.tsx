@@ -6,7 +6,6 @@ import { AxiosError } from "axios";
 import { CalendarDays, MapPin, Users, Clock, CheckCircle } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
-import { Skeleton } from "../../components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "../../components/ui/tabs";
 import { format, parseISO, isBefore } from "date-fns";
 
