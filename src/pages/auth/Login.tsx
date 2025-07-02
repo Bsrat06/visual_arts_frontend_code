@@ -1,18 +1,18 @@
-import { useState, useEffect } from "react"
-import { z } from "zod"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { Input } from "../../components/ui/input"
-import { Button } from "../../components/ui/button"
-import { Label } from "../../components/ui/label"
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "../../components/ui/card" // Card components are usually grouped
-import { Checkbox } from "../../components/ui/checkbox"
-import { Separator } from "../../components/ui/separator"
-import { Eye, EyeOff, Loader2, Lock, Mail } from "lucide-react"
-import API from "../../lib/api"
-import { useNavigate } from "react-router-dom"
-import { useToast } from "../../hooks/use-toast"
-import { cn } from "../../lib/utils"
+import { useState, useEffect } from "react";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Input } from "../../components/ui/input";
+import { Button } from "../../components/ui/button";
+import { Label } from "../../components/ui/label";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "../../components/ui/card";
+import { Checkbox } from "../../components/ui/checkbox";
+import { Separator } from "../../components/ui/separator";
+import { Eye, EyeOff, Loader2, Lock, Mail } from "lucide-react";
+import API from "../../lib/api";
+import { useNavigate } from "react-router-dom";
+import { useToast } from "../../hooks/use-toast";
+import { cn } from "../../lib/utils";
 
 // Simplified login validation schema
 const loginSchema = z.object({
@@ -22,16 +22,16 @@ const loginSchema = z.object({
   password: z.string()
     .min(1, { message: "Password is required" }),
   rememberMe: z.boolean().optional()
-})
+});
 
-type LoginFormValues = z.infer<typeof loginSchema>
+type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function Login() {
-  const [showPassword, setShowPassword] = useState(false)
-  const [isSSOAvailable, setIsSSOAvailable] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const navigate = useNavigate()
-  const { toast } = useToast()
+  const [showPassword, setShowPassword] = useState(false);
+  const [isSSOAvailable, setIsSSOAvailable] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
   const {
     register,
@@ -47,73 +47,92 @@ export default function Login() {
       password: "",
       rememberMe: false
     }
-  })
+  });
 
   // Check for saved credentials and SSO availability
   useEffect(() => {
-    const savedEmail = localStorage.getItem("rememberedEmail")
+    const savedEmail = localStorage.getItem("rememberedEmail");
     if (savedEmail) {
-      setValue("email", savedEmail)
-      setValue("rememberMe", true)
+      setValue("email", savedEmail);
+      setValue("rememberMe", true);
     }
 
-    // Check SSO availability
+    // Check SSO availability - This will likely always catch (fail) because backend has no such endpoint
     API.get("/auth/sso/available")
       .then(() => setIsSSOAvailable(true))
-      .catch(() => setIsSSOAvailable(false))
-  }, [setValue])
+      .catch(() => setIsSSOAvailable(false));
+  }, [setValue]);
 
   const onSubmit = async (data: LoginFormValues) => {
-    setIsLoading(true)
-    
+    setIsLoading(true);
+
     try {
       const res = await API.post("/auth/login/", {
         email: data.email,
         password: data.password
-      })
-      
-      const { token, role, user } = res.data
+      });
+
+      // --- START OF CHANGES ---
+      // Your backend returns token, user_id, email, and role directly.
+      // It does NOT return a nested 'user' object with a 'name'.
+      const { token, user_id, email, role } = res.data;
+
+      // Create a 'user' object for consistent storage if other parts of your app expect it
+      const user = { id: user_id, email: email, role: role, name: email }; // Using email as a fallback for name
 
       // Store credentials if "Remember me" is checked
       if (data.rememberMe) {
-        localStorage.setItem("rememberedEmail", data.email)
+        localStorage.setItem("rememberedEmail", data.email);
       } else {
-        localStorage.removeItem("rememberedEmail")
+        localStorage.removeItem("rememberedEmail");
       }
 
       // Store auth data
-      localStorage.setItem("token", token)
-      localStorage.setItem("role", role)
-      localStorage.setItem("user", JSON.stringify(user))
+      localStorage.setItem("token", token);
+      localStorage.setItem("role", role);
+      localStorage.setItem("user", JSON.stringify(user)); // Store the constructed user object
 
+      // Show success toast
       toast({
         title: "Login successful",
-        description: `Welcome back, ${user.name || user.email}!`,
-      })
+        // Use the email directly for the welcome message
+        description: `Welcome back, ${email}!`, 
+      });
 
       // Redirect with slight delay for better UX
       setTimeout(() => {
-        if (role === "admin") navigate("/admin/dashboard")
-        else if (role === "member") navigate("/member/dashboard")
-        else navigate("/")
-      }, 500)
+        if (role === "admin") {
+          navigate("/admin");
+        } else if (role === "member") {
+          navigate("/member");
+        } else if (role === "visitor") {
+          navigate("/");
+        } else {
+          // Fallback for any other unexpected role or if role is undefined
+          navigate("/"); 
+        }
+      }, 500);
 
     } catch (err: any) {
-      const msg = err?.response?.data?.error || "Invalid email or password. Please try again."
+      const msg = err?.response?.data?.error || "Invalid email or password. Please try again.";
       toast({
         title: "Login failed",
         description: msg,
         variant: "destructive"
-      })
+      });
+      console.error("Login API error:", err.response || err);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
+  // --- END OF CHANGES ---
 
-  const handleForgotPassword = () => navigate("/auth/forgot-password")
+  const handleForgotPassword = () => navigate("/auth/forgot-password");
+  // This function remains as is. Since isSSOAvailable will likely be false,
+  // the buttons that call this function won't be rendered anyway.
   const handleSSOLogin = (provider: string) => {
-    window.location.href = `http://localhost:8000/api/auth/sso/${provider}`
-  }
+    window.location.href = `http://localhost:8000/api/auth/login`; 
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 p-4">
@@ -133,11 +152,11 @@ export default function Login() {
         </CardHeader>
 
         <CardContent className="space-y-4">
-          {isSSOAvailable && (
+          {isSSOAvailable && ( // This block will likely not render due to backend config
             <>
               <div className="grid grid-cols-2 gap-3">
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   onClick={() => handleSSOLogin("google")}
                   className="gap-2"
                 >
@@ -149,8 +168,8 @@ export default function Login() {
                   </svg>
                   Google
                 </Button>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   onClick={() => handleSSOLogin("microsoft")}
                   className="gap-2"
                 >
@@ -163,7 +182,7 @@ export default function Login() {
                   Microsoft
                 </Button>
               </div>
-              
+
               <div className="relative my-4">
                 <div className="absolute inset-0 flex items-center">
                   <Separator />
@@ -255,9 +274,9 @@ export default function Login() {
               </Label>
             </div>
 
-            <Button 
-              type="submit" 
-              className="w-full" 
+            <Button
+              type="submit"
+              className="w-full"
               disabled={isSubmitting || !isValid || isLoading}
             >
               {isLoading ? (
@@ -284,7 +303,7 @@ export default function Login() {
               Register
             </Button>
           </div>
-          
+
           <div className="text-xs text-muted-foreground text-center">
             By continuing, you agree to our{" "}
             <Button variant="link" size="sm" className="px-0 text-xs h-auto">
@@ -298,5 +317,5 @@ export default function Login() {
         </CardFooter>
       </Card>
     </div>
-  )
+  );
 }

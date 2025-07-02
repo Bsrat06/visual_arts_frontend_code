@@ -522,7 +522,7 @@ export default function Home() {
             
             <div className="space-y-6 text-gray-600 dark:text-gray-300">
               <p className="text-lg">
-                Founded in 2024, the Visual Arts Collective has grown into a vibrant hub for artists of all disciplines 
+                Founded in 2021, the Visual Arts Collective has grown into a vibrant hub for artists of all disciplines 
                 and experience levels. We believe in the transformative power of art to connect, inspire, and elevate.
               </p>
               
@@ -653,7 +653,7 @@ export default function Home() {
                 <span className="text-teal-600 dark:text-teal-300 font-medium">SM</span>
               </div>
               <div>
-                <p className="font-medium text-gray-800 dark:text-white">Sarah M.</p>
+                <p className="font-medium text-gray-800 dark:text-white">Brook A.</p>
                 <p className="text-sm text-gray-500 dark:text-gray-400">Painter</p>
               </div>
             </div>
@@ -675,7 +675,7 @@ export default function Home() {
                 <span className="text-blue-600 dark:text-blue-300 font-medium">JD</span>
               </div>
               <div>
-                <p className="font-medium text-gray-800 dark:text-white">Jamal D.</p>
+                <p className="font-medium text-gray-800 dark:text-white">Dawit M.</p>
                 <p className="text-sm text-gray-500 dark:text-gray-400">Photographer</p>
               </div>
             </div>
@@ -697,7 +697,7 @@ export default function Home() {
                 <span className="text-purple-600 dark:text-purple-300 font-medium">ET</span>
               </div>
               <div>
-                <p className="font-medium text-gray-800 dark:text-white">Elena T.</p>
+                <p className="font-medium text-gray-800 dark:text-white">Biruk T.</p>
                 <p className="text-sm text-gray-500 dark:text-gray-400">Mixed Media Artist</p>
               </div>
             </div>
@@ -786,7 +786,7 @@ export default function Home() {
                 </div>
                 <div>
                   <h3 className="font-medium text-gray-800 dark:text-white mb-1">Community Forum</h3>
-                  <p className="text-gray-600 dark:text-gray-400">Join our Discord community</p>
+                  <p className="text-gray-600 dark:text-gray-400">Join our Telegram community</p>
                 </div>
               </div>
               
