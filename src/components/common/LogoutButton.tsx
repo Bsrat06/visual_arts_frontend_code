@@ -1,25 +1,36 @@
+// logoutbutton.tsx
 import { useNavigate } from "react-router-dom"
 import API from "../../lib/api"
 import { Button } from "../../components/ui/button"
+import { type ComponentPropsWithoutRef } from "react"; // Import this
 
-export default function LogoutButton() {
+// Define props for LogoutButton, extending Button's props
+type LogoutButtonProps = ComponentPropsWithoutRef<typeof Button>;
+
+export default function LogoutButton({ className, ...props }: LogoutButtonProps) { // Destructure className and rest of props
   const navigate = useNavigate()
 
   const handleLogout = async () => {
     try {
-      // Optional: Notify backend (but not strictly required with token-only auth)
       await API.post("/auth/logout/")
     } catch (err) {
       console.warn("Logout API failed, ignoring.")
     }
 
-    // Clear localStorage
     localStorage.removeItem("token")
     localStorage.removeItem("role")
 
-    // Redirect to login or home
     navigate("/login")
   }
 
-  return <Button variant="outline" onClick={handleLogout}>Logout</Button>
+  return (
+    <Button
+      variant="outline"
+      onClick={handleLogout}
+      className={className} // Apply the className prop here
+      {...props} // Pass any other props down to the Button component
+    >
+      Logout
+    </Button>
+  )
 }

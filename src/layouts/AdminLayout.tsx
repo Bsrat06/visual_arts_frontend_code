@@ -2,12 +2,12 @@ import { Outlet } from "react-router-dom";
 import AdminSidebar from "../components/admin/AdminSidebar";
 import NotificationBell from "../components/common/NotificationBell";
 import ThemeToggle from "../components/common/ThemeToggle";
-import { FiSearch, FiLogOut, FiMenu, FiX } from "react-icons/fi";
+import { FiLogOut, FiMenu, FiX } from "react-icons/fi";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 
 export default function AdminLayout() {
-  const [searchQuery, setSearchQuery] = useState("");
+  // const [searchQuery, setSearchQuery] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 

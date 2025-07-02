@@ -1,5 +1,6 @@
+// visitornavbar.tsx
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom"; // Keep useNavigate import if it might be used in the future or in other files
 import { Button } from "../../components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "../../components/ui/avatar";
 import LogoutButton from "../../components/common/LogoutButton";
@@ -10,7 +11,8 @@ import { cn } from "../../lib/utils";
 export default function VisitorNavbar() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
-  const navigate = useNavigate();
+  // REMOVE THIS LINE:
+  // const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
 
   const token = localStorage.getItem("token");

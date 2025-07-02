@@ -1,11 +1,10 @@
-import { useState } from "react"
 import { z } from "zod"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Input } from "../../components/ui/input"
 import { Button } from "../../components/ui/button"
 import { Label } from "../../components/ui/label"
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "../../components/ui/card" // Card components are usually grouped
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "../../components/ui/card"
 import { Mail, Lock, User, ShieldCheck, Loader2 } from "lucide-react"
 import API from "../../lib/api"
 import { useNavigate } from "react-router-dom"
@@ -32,27 +31,28 @@ const registerSchema = z.object({
 type RegisterFormValues = z.infer<typeof registerSchema>
 
 export default function Register() {
-  const [isLoading, setIsLoading] = useState(false)
   const navigate = useNavigate()
   const { toast } = useToast()
 
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting, isValid }
+    // Removed 'isValid' from destructuring here
+    formState: { errors, isSubmitting } 
   } = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
     mode: "onChange"
   })
 
   const onSubmit = async (data: RegisterFormValues) => {
-    setIsLoading(true)
-    
     try {
-      const response = await API.post("/auth/registration/", {
+      // 'response' is also still declared but not read if you removed the `isLoading` state.
+      // If you truly don't need the `response` object itself, you can remove the assignment.
+      // E.g., just `await API.post(...)` without assigning to 'response'.
+      await API.post("/auth/registration/", { 
         ...data,
-        role: "member",  // Explicitly set role
-        is_active: false  // Accounts need admin approval
+        role: "member",
+        is_active: false
       })
 
       toast({
@@ -60,14 +60,12 @@ export default function Register() {
         description: "Your account is pending approval. You'll receive an email when it's activated.",
       })
 
-      // Redirect to login after short delay
       setTimeout(() => navigate("/login"), 2000)
 
     } catch (err: any) {
       let errorMessage = "Registration failed. Please try again."
       
       if (err.response) {
-        // Handle Django REST framework validation errors
         if (err.response.data.email) {
           errorMessage = `Email: ${err.response.data.email.join(" ")}`
         } else if (err.response.data.password) {
@@ -82,9 +80,7 @@ export default function Register() {
         description: errorMessage,
         variant: "destructive"
       })
-    } finally {
-      setIsLoading(false)
-    }
+    } 
   }
 
   return (
@@ -191,8 +187,9 @@ export default function Register() {
             <Button 
               type="submit" 
               className="w-full" 
+              disabled={isSubmitting}
             >
-              {isLoading ? (
+              {isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Creating account...
