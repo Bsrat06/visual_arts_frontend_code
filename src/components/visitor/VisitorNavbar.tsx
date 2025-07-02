@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Button } from "../../components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "../../components/ui/avatar";
 import LogoutButton from "../../components/common/LogoutButton";
@@ -14,6 +14,7 @@ export default function VisitorNavbar() {
   const [searchQuery, setSearchQuery] = useState("");
   const { theme, toggleTheme } = useTheme();
   const [windowWidth] = useState(window.innerWidth);
+  const location = useLocation();
 
   const token = localStorage.getItem("token");
   const isAuthenticated = !!token;
@@ -29,7 +30,7 @@ export default function VisitorNavbar() {
       message: "Thank you for joining our community",
       time: "Just now",
       read: false,
-    }
+    },
   ]);
 
   const toggleDropdown = (e: React.MouseEvent) => {
@@ -45,6 +46,18 @@ export default function VisitorNavbar() {
   const toggleSearch = () => {
     setIsSearchOpen(!isSearchOpen);
     if (isMobileOpen) setIsMobileOpen(false);
+  };
+
+  const scrollToSection = (sectionId: string) => {
+    if (location.pathname !== "/") {
+      window.location.href = `/#${sectionId}`;
+    } else {
+      const element = document.getElementById(sectionId);
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth" });
+      }
+    }
+    setIsMobileOpen(false);
   };
 
   useEffect(() => {
@@ -64,7 +77,7 @@ export default function VisitorNavbar() {
   };
 
   const showDashboardLink = isAuthenticated && (userRole === "admin" || userRole === "member");
-  const unreadNotifications = notifications.filter(n => !n.read).length;
+  const unreadNotifications = notifications.filter((n) => !n.read).length;
 
   return (
     <nav className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 shadow-sm">
@@ -80,8 +93,8 @@ export default function VisitorNavbar() {
           >
             {isMobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </Button>
-          <Link 
-            to="/" 
+          <Link
+            to="/"
             className="text-xl font-bold text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 transition-colors"
           >
             VisualArts
@@ -96,8 +109,8 @@ export default function VisitorNavbar() {
           )}
         >
           <li className="py-2 lg:py-0">
-            <Link 
-              to="/" 
+            <Link
+              to="/"
               className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors"
               onClick={() => setIsMobileOpen(false)}
             >
@@ -105,17 +118,26 @@ export default function VisitorNavbar() {
             </Link>
           </li>
           <li className="py-2 lg:py-0">
-            <Link 
-              to="/about" 
+            <button
+              onClick={() => scrollToSection("about")}
               className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors"
-              onClick={() => setIsMobileOpen(false)}
             >
               About
-            </Link>
+            </button>
           </li>
+          
           <li className="py-2 lg:py-0">
-            <Link 
-              to="/gallery" 
+            <button
+              onClick={() => scrollToSection("contact")}
+              className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors"
+            >
+              Contact
+            </button>
+          </li>
+
+          <li className="py-2 lg:py-0">
+            <Link
+              to="/gallery"
               className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors"
               onClick={() => setIsMobileOpen(false)}
             >
@@ -123,27 +145,18 @@ export default function VisitorNavbar() {
             </Link>
           </li>
           <li className="py-2 lg:py-0">
-            <Link 
-              to="/events" 
+            <Link
+              to="/events"
               className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors"
               onClick={() => setIsMobileOpen(false)}
             >
               Events
             </Link>
           </li>
-          <li className="py-2 lg:py-0">
-            <Link 
-              to="/contact" 
-              className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors"
-              onClick={() => setIsMobileOpen(false)}
-            >
-              Contact
-            </Link>
-          </li>
           
           {showDashboardLink && (
             <li className="py-2 lg:py-0">
-              <Link 
+              <Link
                 to={getDashboardLink()}
                 className="font-medium text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 transition-colors"
                 onClick={() => setIsMobileOpen(false)}
@@ -235,7 +248,7 @@ export default function VisitorNavbar() {
                 </Avatar>
                 <span className="hidden md:inline text-sm font-medium">{username}</span>
               </Button>
-              
+
               {isDropdownOpen && (
                 <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg py-1 z-50 animate-fadeIn">
                   <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-700">
@@ -266,17 +279,17 @@ export default function VisitorNavbar() {
           ) : (
             <div className="flex items-center gap-2">
               <Link to="/login">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
+                <Button
+                  variant="outline"
+                  size="sm"
                   className="text-teal-600 dark:text-teal-400 border-teal-600 dark:border-teal-400 hover:bg-teal-50 dark:hover:bg-teal-900/50"
                 >
                   Login
                 </Button>
               </Link>
               <Link to="/register">
-                <Button 
-                  size="sm" 
+                <Button
+                  size="sm"
                   className="bg-teal-600 dark:bg-teal-700 hover:bg-teal-700 dark:hover:bg-teal-600 text-white"
                 >
                   Register

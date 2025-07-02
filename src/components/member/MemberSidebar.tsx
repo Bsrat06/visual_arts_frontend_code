@@ -1,9 +1,8 @@
 import { useState, useEffect } from "react";
-import { NavLink, useLocation } from "react-router-dom";
-import { FiSearch, FiPlus, FiFileText, FiX } from "react-icons/fi";
+import { NavLink } from "react-router-dom";
+import { FiSearch, FiX } from "react-icons/fi";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "../../lib/utils";
-import { Link } from "react-router-dom";
 
 interface MemberSidebarProps {
   isMobileOpen: boolean;
@@ -29,11 +28,9 @@ export default function MemberSidebar({ isMobileOpen, toggleMobileMenu, setSideb
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
-  const location = useLocation();
 
   const collapsedWidth = 80;
   const expandedWidth = 260;
-  const mobileWidth = 280;
 
   useEffect(() => {
     const handleResize = () => {

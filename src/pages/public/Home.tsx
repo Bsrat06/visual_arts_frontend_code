@@ -498,6 +498,7 @@ export default function Home() {
 
       {/* About Section */}
       <motion.section
+        id="about"
         initial="hidden"
         animate="visible"
         variants={sectionVariants}
@@ -753,6 +754,7 @@ export default function Home() {
 
       {/* Contact Section */}
       <motion.section
+        id="contact"
         initial="hidden"
         animate="visible"
         variants={sectionVariants}

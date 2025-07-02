@@ -130,7 +130,7 @@ export default function Login() {
   const handleForgotPassword = () => navigate("/auth/forgot-password");
   // This function remains as is. Since isSSOAvailable will likely be false,
   // the buttons that call this function won't be rendered anyway.
-  const handleSSOLogin = (provider: string) => {
+  const handleSSOLogin = (_p0: string) => {
     window.location.href = `http://localhost:8000/api/auth/login`; 
   };
 
