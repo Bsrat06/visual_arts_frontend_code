@@ -1,6 +1,6 @@
 // AdminSidebar.tsx
 import { useState, useEffect } from "react";
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import { FiSearch, FiX, FiSettings, FiHelpCircle, FiUser } from "react-icons/fi";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "../../lib/utils";
@@ -31,11 +31,9 @@ export default function AdminSidebar({ isMobileOpen, toggleMobileMenu, setSideba
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
-  const location = useLocation();
 
   const collapsedWidth = 80;
   const expandedWidth = 260;
-  const mobileWidth = 280;
 
   useEffect(() => {
     const handleResize = () => {
